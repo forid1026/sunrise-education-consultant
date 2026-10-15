@@ -688,7 +688,7 @@
   .sec-team-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 46px; }
   .sec-team-card { background: var(--sec-white); border-radius: 16px; overflow: hidden; box-shadow: 0 14px 30px rgba(22,33,58,0.07); text-align: center; transition: transform 0.2s ease, box-shadow 0.2s ease; }
   .sec-team-card:hover { transform: translateY(-4px); box-shadow: 0 18px 36px rgba(22,33,58,0.12); }
-  .sec-team-photo { width: 100% !important; height: 220px !important; object-fit: cover !important; display: block; background: var(--sec-offwhite); }
+  .sec-team-photo { width: 100% !important; height: auto !important; object-fit: cover !important; display: block; background: var(--sec-offwhite); }
   .sec-team-body { padding: 18px 16px 20px; }
   .sec-team-body h3 { font-size: 15.5px; font-weight: 800; color: var(--sec-navy); margin: 0 0 4px; }
   .sec-team-role { display: block; font-size: 12.5px; color: var(--sec-blue); font-weight: 600; margin-bottom: 12px; }

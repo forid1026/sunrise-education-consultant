@@ -5,6 +5,13 @@ export default defineNuxtConfig({
 
   css: ["~/assets/css/style.css"],
 
+  runtimeConfig: {
+    public: {
+      // Overridden by NUXT_PUBLIC_API_BASE in .env
+      apiBase: "http://127.0.0.1:8000/v1",
+    },
+  },
+
   app: {
     head: {
       htmlAttrs: { lang: "en" },
