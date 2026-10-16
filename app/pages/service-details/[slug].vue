@@ -147,11 +147,11 @@
           </article>
 
           <!-- FAQ -->
-          <article class="sdp-card sdp-reveal">
+          <article class="sdp-card sdp-reveal" v-if="faqs.length">
             <span class="sdp-eyebrow"><i></i>FAQ</span>
             <h2 class="sdp-h2">Common questions</h2>
             <div class="sdp-faq">
-              <details v-for="(f, i) in faqList" :key="f.q" :open="i === 0">
+              <details v-for="(f, i) in faqs" :key="f.q" :open="i === 0">
                 <summary>{{ f.q }}</summary>
                 <p>{{ f.a }}</p>
               </details>
@@ -271,7 +271,13 @@
 </template>
 
 <script setup>
-import { faqs as allFaqs } from "~/data/servicesPage";
+/* ---------- Load FAQs from the API ---------- */
+// import { faqs as allFaqs } from "~/data/servicesPage";
+const { data: faqs } = await useApi("/faqs", {
+  key: "faqs-services",
+  query: { group: "services" },
+  transform: (res) => res.data,
+})
 
 const route = useRoute();
 const router = useRouter();
@@ -366,7 +372,7 @@ const steps = [
   },
 ];
 
-const faqList = allFaqs.slice(0, 4);
+const faqList = faqs.value.slice(0, 4);
 
 /* ---------- Content: full description first, overview as a fallback ---------- */
 const escapeHtml = (s) =>
