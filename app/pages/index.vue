@@ -346,12 +346,8 @@
           >
             <img
               class="sec-story-photo"
-              :src="s.photo"
-              :alt="
-                i < stories.length
-                  ? `${s.name}, Sunrise Education Consultants student who studied in ${s.country}`
-                  : ''
-              "
+              :src="s.image"
+              :alt="s.image_alt ?? s.name"
               loading="lazy"
             />
             <span class="sec-story-quotemark" aria-hidden="true">&ldquo;</span>
@@ -361,7 +357,7 @@
                 <span class="sec-story-dot">&bull;</span>
                 <span class="sec-story-year">{{ s.year }}</span>
               </div>
-              <p class="sec-story-quote">{{ s.quote }}</p>
+              <p class="sec-story-quote" v-html="s.quotation"></p>
               <div class="sec-story-footer">
                 <span class="sec-story-name">{{ s.name }}</span>
                 <span class="sec-story-program">{{ s.program }}</span>
@@ -374,6 +370,7 @@
 
     <!-- ================= EVENTS ================= -->
     <section
+    v-if="events.length"
       class="sec-events"
       aria-label="Upcoming Events at Sunrise Education Consultants"
     >
@@ -394,17 +391,29 @@
               <span class="sec-event-day">{{ e.day }}</span
               ><span class="sec-event-month">{{ e.month }}</span>
             </div>
+            <NuxtLink
+              :to="`/events/${e.slug}`"
+              tabindex="-1"
+              aria-hidden="true"
+            >
             <img
               class="sec-event-img"
-              :src="e.img"
+              :src="e.image"
               :alt="`${e.title} hosted by Sunrise Education Consultants`"
               loading="lazy"
             />
+            </NuxtLink>
             <div class="sec-event-body">
-              <h3>{{ e.title }}</h3>
+              <h3>
+                <NuxtLink :to="`/events/${e.slug}`" class="evp-title-link">{{
+                  e.title
+                }}</NuxtLink>
+
+              </h3>
               <div class="sec-event-meta">
                 <span>&#128337; {{ e.time }}</span
-                ><span>&#128205; {{ e.place }}</span>
+                >
+                <span>&#128205; {{ e.venue }}</span>
               </div>
               <NuxtLink :to="`/event/reg/${e.slug}`" class="sec-event-btn"
                 >Book Now</NuxtLink
@@ -422,6 +431,7 @@
 
     <!-- ================= TEAM ================= -->
     <section
+      v-if="team.length"
       class="sec-team"
       aria-label="Meet the Sunrise Education Consultants Team"
     >
@@ -630,7 +640,11 @@
     </section>
 
     <!-- ================= FAQ ================= -->
-    <section class="sec-faq" aria-label="Frequently Asked Questions">
+    <section
+      v-if="faqs.length"
+      class="sec-faq"
+      aria-label="Frequently Asked Questions"
+    >
       <div class="sec-faq-inner">
         <div class="sec-faq-head">
           <span class="sec-faq-eyebrow"
@@ -645,7 +659,7 @@
         <div class="sec-faq-list">
           <div
             v-for="(f, i) in faqs"
-            :key="f.q"
+            :key="f.id"
             class="sec-faq-item"
             :class="{ 'is-open': openFaq === i }"
           >
@@ -655,11 +669,13 @@
               :aria-expanded="openFaq === i"
               @click="openFaq = openFaq === i ? -1 : i"
             >
-              <span>{{ f.q }}</span
+              <span>{{ f.question }}</span
               ><span class="sec-faq-icon">&#43;</span>
             </button>
             <div class="sec-faq-answer">
-              <p>{{ f.a }}</p>
+              <p> 
+                <div v-html="f.answer"></div>
+              </p>
             </div>
           </div>
         </div>
@@ -888,136 +904,47 @@ const processSteps = [
   },
 ];
 
-/* TODO: replace with 12 real, distinct testimonials (all copies are currently the same placeholder) */
-const baseStory = {
-  photo: "https://studyitalybd.com/wp-content/uploads/2025/11/2-scaled.jpg",
-  country: "Italy",
-  year: "2025-2026 Intake",
-  quote:
-    "I got awesome customer service from Sunrise Education Consultants, they know what they are doing. Straight to the point, help with the forms if you need it. Amazing visa success results always. I 100% recommend them to others.",
-  name: "Fariha Hossain",
-  program: "Università degli Studi di Pavia",
-};
-const stories = Array.from({ length: 12 }, () => ({ ...baseStory }));
-const loopStories = [...stories, ...stories];
 
-/* TODO: fill real event details */
-const events = [
-  {
-    day: "[DD]",
-    month: "[Mon]",
-    img: "https://sunrise-bd.net/upload/event_image/1799642115373023.jpg",
-    title: "[Event Name, e.g. Study in Canada Guidelines]",
-    time: "[Time, e.g. 10:00 AM]",
-    place: "[Location, e.g. Banani, Dhaka Office]",
-    slug: "[event-slug]",
-  },
-  {
-    day: "[DD]",
-    month: "[Mon]",
-    img: "https://sunrise-bd.net/upload/event_image/1799642165668576.jpg",
-    title: "[Event Name, e.g. Scholarship Guidelines]",
-    time: "[Time]",
-    place: "[Location]",
-    slug: "[event-slug]",
-  },
-  {
-    day: "[DD]",
-    month: "[Mon]",
-    img: "https://sunrise-bd.net/upload/event_image/1799642178214949.jpg",
-    title: "[Event Name, e.g. Study in Italy Seminar]",
-    time: "[Time]",
-    place: "[Location]",
-    slug: "[event-slug]",
-  },
-];
+/* ---------- Load success stories from the API ---------- */
+const { data: storyData } = await useApi("/success-stories", {
+  key: "stories-all",
+  transform: (res: any) => res.data,
+});
+const storiesData = computed<any[]>(() => (storyData.value as any[]) || []);
+const stories = computed<any[]>(() => storiesData.value.slice(0, 12));
+const loopStories = [...stories.value, ...stories.value];
 
-const teamBase = "https://sunrise-bd.net/upload/team/";
-const team = [
-  {
-    name: "Anisuzzaman Kiron",
-    role: "Founder & CEO",
-    slug: "anisuzzaman-kiron",
-    photo: teamBase + "1873934979029250.jpeg",
-  },
-  {
-    name: "Yeasmin Akther",
-    role: "Co-Founder",
-    slug: "yeasmin-akther",
-    photo: teamBase + "1873934989006093.jpeg",
-  },
-  {
-    name: "Md Kamrul Hasan",
-    role: "General Manager",
-    slug: "kamrul",
-    photo: teamBase + "1873955330077369.jpg",
-  },
-  {
-    name: "Md Samsuzzaman",
-    role: "Chief Adviser",
-    slug: "md-samsuzzaman",
-    photo: teamBase + "1873955352623353.jpg",
-  },
-  {
-    name: "Arif Rahman",
-    role: "Operations Manager",
-    slug: "arif-rahman",
-    photo: teamBase + "1873955875053048.png",
-  },
-  {
-    name: "Kauser Hossain",
-    role: "Destination Manager",
-    slug: "kauser-hossain",
-    photo: teamBase + "1850751175651969.jpeg",
-  },
-  {
-    name: "Mousumi Mou",
-    role: "Senior Student Counselor",
-    slug: "mou",
-    photo: teamBase + "1850750813054546.jpeg",
-  },
-  {
-    name: "Tithee Saha",
-    role: "Student Counselor",
-    slug: "tithee-saha",
-    photo: teamBase + "1850750854734283.jpeg",
-  },
-];
 
-const faqs = [
-  {
-    q: "What does an education consultant do?",
-    a: "An education consultant guides students through studying abroad end to end — university and program selection, application and document preparation, scholarship arrangement, and student visa processing. At Sunrise, each student also gets pre-departure briefing and post-arrival support once they land.",
-  },
-  {
-    q: "How much does Sunrise Education Consultants charge for its services?",
-    a: "Your first consultation is free. Beyond that, fees depend on the destination country and the specific services you need (application support, scholarship assistance, visa processing). Contact us for a clear quote tailored to your situation before you commit to anything.",
-  },
-  {
-    q: "Which countries does Sunrise help students apply to?",
-    a: "Sunrise guides students applying to universities in the USA, UK, Canada, Australia, New Zealand, Italy, Hungary, Malta, Finland, Cyprus, Malaysia, China, Norway, Turkey, and Greece. Alongside education consulting, our immigration division also supports relocation to Germany, Norway, Hungary, Romania, and Dubai.",
-  },
-  {
-    q: "How long does the student visa process take?",
-    a: "It varies by destination country, intake season, and how complete your documentation is — processing times are set by each country's embassy or immigration authority, not by us, and can range from a few weeks to a few months. Your counsellor will give you a realistic estimate specific to your destination once your application is underway.",
-  },
-  {
-    q: "Do you help with scholarships?",
-    a: "Yes. Scholarship arrangement is one of our core services — we help identify merit and need-based scholarships you may be eligible for and support you through the application process alongside your university admission.",
-  },
-  {
-    q: "What is your visa success rate?",
-    a: "Our visa success rate is 80%, based on our documented case history since 2014. This is built on careful eligibility screening and thorough document preparation before any application is submitted, handled by our dedicated in-house visa team.",
-  },
-  {
-    q: "Do you have an office outside Dhaka?",
-    a: "Yes. Alongside our head office in Banani, Dhaka, we have a second office in Sylhet (Ananda Tower, 3rd Floor, Jail Road), so students in the Sylhet region can get in-person counselling without traveling to Dhaka.",
-  },
-  {
-    q: "How do I book a free consultation?",
-    a: "Fill out the consultation form on this page, call us at +880 1911 878 274, or message us on WhatsApp. A Sunrise counsellor will get back to you within one business day to schedule your free session.",
-  },
-];
+/* ---------- Load upcoming events from the API ---------- */
+const { data: eventData } = await useApi("/events", {
+  key: "events-upcoming",
+  query: { type: "upcoming" },
+  transform: (res: any) => res.data,
+});
+const events = computed<any[]>(() =>
+  ((eventData.value as any[]) || []).slice(0, 3).map((e) => ({
+    ...e,
+    day: eventDate(e.date).day,
+    month: eventDate(e.date).month,
+  })),
+);
+
+
+// Team comes from the API (same key as the staff page, so it is cached)
+const { data: teamData } = await useApi("/staff", {
+  key: "staff-list",
+  transform: (res: any) => res.data,
+});
+const team = computed<any[]>(() => (teamData.value as any[]) || []);
+
+/* ---------- Load FAQs from the API ---------- */
+const { data: faqData } = await useApi("/faqs", {
+  key: "faqs-home",
+  query: { group: "general" },
+  transform: (res: any) => res.data,
+});
+const faqs = computed<any[]>(() => (faqData.value as any[]) || []);
+
 const openFaq = ref(0);
 
 /* ---------------------------------------------------------------- JSON-LD */
@@ -1073,7 +1000,7 @@ const org = {
     },
   ],
   areaServed: "BD",
-  employee: team.map((m) => ({
+  employee: team.value.map((m) => ({
     "@type": "Person",
     name: m.name,
     jobTitle: m.role,
@@ -1094,18 +1021,23 @@ const howTo = {
     text: s.text,
   })),
 };
-const faqLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqs.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+const faqLd = computed(() =>
+  faqs.value.length
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: faqs.value.map((f) => ({
+          "@type": "Question",
+          name: f.question,
+          acceptedAnswer: { "@type": "Answer", text: f.answer_text },
+        })),
+      }
+    : null,
+);
+
 useHead({
   link: [{ rel: "canonical", href: siteUrl }],
-  script: [org, howTo, faqLd].map((o) => ({
+  script: [org, howTo, faqLd.value].filter(Boolean).map((o) => ({
     type: "application/ld+json",
     innerHTML: JSON.stringify(o),
   })),
