@@ -320,7 +320,7 @@
     </section>
 
     <!-- ================= STORIES ================= -->
-    <section
+    <!-- <section
       class="sec-stories"
       aria-label="Sunrise Education Consultants Student Success Stories"
     >
@@ -366,6 +366,68 @@
           </div>
         </div>
       </div>
+    </section> -->
+
+
+        <!-- ================= STORIES ================= -->
+    <section
+      v-if="stories.length"
+      class="sec-stories"
+      aria-label="Sunrise Education Consultants Student Success Stories"
+    >
+      <div class="sec-stories-inner">
+        <div class="sec-stories-head">
+          <span class="sec-stories-eyebrow"
+            ><span class="sec-stories-eyebrow-dot"></span>Success Stories</span
+          >
+          <h2 class="sec-stories-title">Our Successful Students Review</h2>
+          <p class="sec-stories-subtitle">
+            Students Sunrise has guided from application to admission and visa
+            approval &mdash; with their permission to share.
+          </p>
+        </div>
+      </div>
+      <div ref="storiesViewport" class="sec-stories-viewport">
+        <div ref="storiesTrack" class="sec-stories-track">
+          <div
+            v-for="(s, i) in loopStories"
+            :key="i"
+            class="sec-story-card"
+            :aria-hidden="i >= stories.length ? 'true' : undefined"
+          >
+            <img
+              v-if="s.image"
+              class="sec-story-photo"
+              :src="s.image"
+              :alt="s.image_alt || s.name"
+              loading="lazy"
+            />
+            <div v-else class="sec-story-photo" style="display:grid;place-items:center;font-size:48px;font-weight:800">
+              {{ s.name?.trim().charAt(0).toUpperCase() }}
+            </div>
+            <span class="sec-story-quotemark" aria-hidden="true">&ldquo;</span>
+            <div class="sec-story-body">
+              <div class="sec-story-meta">
+                <span class="sec-story-country">{{ s.country }}</span>
+                <template v-if="s.intake">
+                  <span class="sec-story-dot">&bull;</span>
+                  <span class="sec-story-year">{{ s.intake }}</span>
+                </template>
+              </div>
+              <div class="sec-story-quote" v-html="s.quotation"></div>
+              <div class="sec-story-footer">
+                <span class="sec-story-name">{{ s.name }}</span>
+                <span class="sec-story-program">{{ s.university }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p style="text-align:center;margin-top:24px">
+        <NuxtLink to="/success-stories" class="sec-team-btn">
+          Read All Success Stories <span class="sec-team-btn-arrow">&rarr;</span>
+        </NuxtLink>
+      </p>
     </section>
 
     <!-- ================= EVENTS ================= -->
@@ -906,14 +968,13 @@ const processSteps = [
 
 
 /* ---------- Load success stories from the API ---------- */
+/* ---------- Load success stories from the API ---------- */
 const { data: storyData } = await useApi("/success-stories", {
-  key: "stories-all",
+  key: "stories-list",
   transform: (res: any) => res.data,
 });
-const storiesData = computed<any[]>(() => (storyData.value as any[]) || []);
-const stories = computed<any[]>(() => storiesData.value.slice(0, 12));
-const loopStories = [...stories.value, ...stories.value];
-
+const stories = computed<any[]>(() => (storyData.value as any[]) || []);
+const loopStories = computed(() => [...stories.value, ...stories.value]);
 
 /* ---------- Load upcoming events from the API ---------- */
 const { data: eventData } = await useApi("/events", {

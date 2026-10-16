@@ -59,7 +59,7 @@
             <ul class="sf-links">
               <li><NuxtLink to="/about-us">About Us</NuxtLink></li>
               <li><NuxtLink to="/scholarships">Scholarships</NuxtLink></li>
-              <li><NuxtLink to="/success-story">Success Stories</NuxtLink></li>
+              <li><NuxtLink to="/success-stories">Success Stories</NuxtLink></li>
               <li><NuxtLink to="/blog">Blog</NuxtLink></li>
               <li><NuxtLink to="/staff">Our Team</NuxtLink></li>
               <li><NuxtLink to="/career">Careers</NuxtLink></li>
