@@ -3119,6 +3119,7 @@ body {
   color: inherit;
   text-decoration: none;
 }
+
 .evp-title-link:hover {
   color: #16803c;
 }
@@ -12060,4 +12061,55 @@ fieldset.srp-group {
   .sap-hero-rays {
     animation: none
   }
+}
+
+
+
+/* =====================================================================
+   HEADER STICKY FIX
+   ===================================================================== */
+
+.sh-wrap {
+  top: -40px;
+}
+
+.sh-topbar,
+.sh-wrap.is-scrolled .sh-topbar {
+  height: 40px;
+  max-height: none;
+  opacity: 1;
+  transition: none;
+}
+
+.sh-main .sh-container,
+.sh-wrap.is-scrolled .sh-main .sh-container {
+  height: 84px;
+  transition: none;
+}
+
+.sh-logo img,
+.sh-wrap.is-scrolled .sh-logo img {
+  height: 56px;
+}
+
+/* Topbar mobile version */
+@media (max-width: 640px) {
+  .sh-wrap {
+    top: 0;
+  }
+
+  .sh-main .sh-container,
+  .sh-wrap.is-scrolled .sh-main .sh-container {
+    height: 70px;
+  }
+
+  .sh-logo img,
+  .sh-wrap.is-scrolled .sh-logo img {
+    height: 46px;
+  }
+}
+
+/* Optional: Chrome scroll bar fix */
+html {
+  scrollbar-gutter: stable;
 }
