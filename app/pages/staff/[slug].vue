@@ -16,15 +16,18 @@ if (!member.value) {
   });
 }
 
-// Other members (same key as the list page, so it is cached)
+// Other members. Own cache key: the /staff page caches the RAW response
+// under "staff-list", so sharing that key gave us { data: [...] } instead of
+// an array. We also normalise below, whatever shape comes back.
 const { data: team } = await useApi("/staff", {
-  key: "staff-list",
-  transform: (res) => res.data,
+  key: "staff-others",
 });
 
-const others = computed(() =>
-  (team.value || []).filter((m) => m.slug !== slug).slice(0, 3),
-);
+const others = computed(() => {
+  const raw = team.value;
+  const list = Array.isArray(raw) ? raw : raw?.data || [];
+  return list.filter((m) => m.slug !== slug).slice(0, 3);
+});
 
 // Helpers
 const initial = (name) => name?.trim().charAt(0).toUpperCase() || "?";
@@ -69,7 +72,7 @@ useHead({
   script: [
     {
       type: "application/ld+json",
-      children: JSON.stringify({
+      innerHTML: JSON.stringify({
         "@context": "https://schema.org",
         "@type": "Person",
         name: member.value.name,

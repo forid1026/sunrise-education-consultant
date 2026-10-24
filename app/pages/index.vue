@@ -224,8 +224,9 @@
       </div>
     </section>
 
-    <!-- ================= COUNTRIES ================= -->
+        <!-- ================= COUNTRIES ================= -->
     <section
+      v-if="countries.length"
       class="sec-countries"
       aria-label="Study Destinations Sunrise Offers"
     >
@@ -238,8 +239,9 @@
           <h2 class="sec-countries-title">Countries We Offer</h2>
           <p class="sec-countries-subtitle">
             Sunrise guides students through admissions, scholarships, and visa
-            processing across 15 study destinations — each with its own intake
-            schedule, tuition structure, and post-study options.
+            processing across {{ countries.length }} study destinations — each
+            with its own intake schedule, tuition structure, and post-study
+            options.
           </p>
         </div>
       </div>
@@ -257,7 +259,8 @@
               :src="c.img"
               :alt="
                 i < countries.length
-                  ? `Bangladeshi student studying in ${c.name} with Sunrise Education Consultants`
+                  ? c.alt ||
+                    `Bangladeshi student studying in ${c.name} with Sunrise Education Consultants`
                   : ''
               "
               loading="lazy"
@@ -319,57 +322,8 @@
       </div>
     </section>
 
+    
     <!-- ================= STORIES ================= -->
-    <!-- <section
-      class="sec-stories"
-      aria-label="Sunrise Education Consultants Student Success Stories"
-    >
-      <div class="sec-stories-inner">
-        <div class="sec-stories-head">
-          <span class="sec-stories-eyebrow"
-            ><span class="sec-stories-eyebrow-dot"></span>Success Stories</span
-          >
-          <h2 class="sec-stories-title">Our Successful Students Review</h2>
-          <p class="sec-stories-subtitle">
-            Twelve of the students Sunrise has guided from application to
-            admission and visa approval &mdash; with their permission to share.
-          </p>
-        </div>
-      </div>
-      <div ref="storiesViewport" class="sec-stories-viewport">
-        <div ref="storiesTrack" class="sec-stories-track">
-          <div
-            v-for="(s, i) in loopStories"
-            :key="i"
-            class="sec-story-card"
-            :aria-hidden="i >= stories.length ? 'true' : undefined"
-          >
-            <img
-              class="sec-story-photo"
-              :src="s.image"
-              :alt="s.image_alt ?? s.name"
-              loading="lazy"
-            />
-            <span class="sec-story-quotemark" aria-hidden="true">&ldquo;</span>
-            <div class="sec-story-body">
-              <div class="sec-story-meta">
-                <span class="sec-story-country">{{ s.country }}</span>
-                <span class="sec-story-dot">&bull;</span>
-                <span class="sec-story-year">{{ s.year }}</span>
-              </div>
-              <p class="sec-story-quote" v-html="s.quotation"></p>
-              <div class="sec-story-footer">
-                <span class="sec-story-name">{{ s.name }}</span>
-                <span class="sec-story-program">{{ s.program }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section> -->
-
-
-        <!-- ================= STORIES ================= -->
     <section
       v-if="stories.length"
       class="sec-stories"
@@ -736,7 +690,7 @@
             </button>
             <div class="sec-faq-answer">
               <p> 
-                <div v-html="f.answer"></div>
+                <span v-html="f.answer"></span>
               </p>
             </div>
           </div>
@@ -841,107 +795,40 @@ const whyCards = [
 ];
 
 const imgBase = "https://studyitalybd.com/wp-content/uploads/2026/08/";
-interface Country {
-  name: string;
-  to: string;
-  text: string;
-  img?: string;
-  grad?: string;
-}
-const countries: Country[] = [
-  {
-    name: "Italy",
-    to: "/study-abroad/italy",
-    img: imgBase + "study-in-milan-italy-international-students.webp.webp",
-    text: "Italy is one of Europe's most affordable study destinations, with public universities charging as little as €200–€2,000 per year for eligible international students. Applications for the September intake open through the Universitaly portal each spring, and our visa guidance follows MAECI requirements for the Type D student visa.",
-  },
-  {
-    name: "USA",
-    to: "/study-abroad/study-in-usa",
-    img: imgBase + "american-elections-vote-right-1-scaled.jpg",
-    text: "The USA runs two main intakes each year, Fall (August/September) and Spring (January), backed by one of the widest scholarship ecosystems of any destination, from merit awards to graduate assistantships. We guide students through SEVIS registration and F-1 visa interview preparation from start to finish.",
-  },
-  {
-    name: "UK",
-    to: "/study-abroad/study-in-uk",
-    img: imgBase + "architect-history-victorian-famous-tower-scaled.jpg",
-    text: "UK universities charge international tuition typically between £10,000–£38,000 per year depending on the course. Most programs begin in September, and graduates can stay on the Graduate Route visa for up to 2 years after finishing their degree to gain work experience.",
-  },
-  {
-    name: "Canada",
-    to: "/study-abroad/study-in-canada",
-    img: imgBase + "canada-day-celebration-with-maple-leaf-symbol-scaled.jpg",
-    text: "Canada offers three intakes, September, January, and May, giving students more flexibility than most destinations. Graduates of eligible programs can apply for a Post-Graduation Work Permit valid for up to 3 years, one of the strongest post-study pathways available.",
-  },
-  {
-    name: "Australia",
-    to: "/study-abroad/study-in-australia",
-    img: imgBase + "ramadan-australia-flag-mosque-scaled.jpg",
-    text: "Australian universities run two intakes, in February and July, with annual tuition generally ranging from AUD 20,000–45,000 depending on the program. We support students through the Subclass 500 student visa process from application through arrival.",
-  },
-  {
-    name: "New Zealand",
-    to: "/study-abroad/study-in-new-zealand",
-    img: imgBase + "person-front-cathedral-scaled.jpg",
-    text: "New Zealand's main intakes fall in February and July, and graduates of eligible qualifications can apply for a post-study work visa valid for up to 3 years. It remains one of the more accessible English-speaking destinations in terms of visa approval timelines.",
-  },
-  {
-    name: "Hungary",
-    to: "/study-in-hungary-from-bangladesh",
-    grad: "linear-gradient(135deg,#436F4D,#2C4A32)",
-    text: "Hungary offers some of Europe's lowest tuition, from about €1,200 per year for arts programs up to €8,000 for medicine, plus the government-funded Stipendium Hungaricum scholarship covering tuition and living costs for eligible students. Applicants apply for a national D-type student visa.",
-  },
-  {
-    name: "Malta",
-    to: "/study-in-malta-from-bangladesh",
-    grad: "linear-gradient(135deg,#CF142B,#8E0E1D)",
-    text: "Malta's only public university, the University of Malta, teaches entirely in English, with non-EU tuition typically between €6,500 and €18,000 per year depending on level. As an EU member state, a Maltese student visa also opens Schengen-area travel during breaks.",
-  },
-  {
-    name: "Finland",
-    to: "/study-in-finland-from-bangladesh",
-    grad: "linear-gradient(135deg,#003580,#002554)",
-    text: "Finnish public universities charge non-EU tuition between €8,000 and €20,000 per year. Students apply for a residence permit for studies through Migri, showing at least €9,600 in available funds for the year, and can work up to 30 hours per week during term.",
-  },
-  {
-    name: "Cyprus",
-    to: "/study-in-cyprus-from-bangladesh",
-    grad: "linear-gradient(135deg,#D57800,#A85E00)",
-    text: "Cyprus combines EU-recognized degrees with tuition from about €3,600 to €13,000 per year, most programs taught fully in English. The country runs Fall and Spring intakes, and roughly three-quarters of the population speaks English day to day.",
-  },
-  {
-    name: "Malaysia",
-    to: "/study-in-malaysia",
-    grad: "linear-gradient(135deg,#0032A0,#000C4E)",
-    text: "Malaysia offers three intakes a year, February, July, and October, with public university tuition typically between RM 8,000 and RM 30,000 annually, among the most affordable English-taught options in Asia, with low living costs in Kuala Lumpur and other cities.",
-  },
-  {
-    name: "China",
-    to: "/study-in-china",
-    grad: "linear-gradient(135deg,#DE2910,#9E1D0B)",
-    text: "China runs September and February intakes, with international tuition typically between CNY 20,000 and CNY 50,000 per year, well below equivalent Western programs. The Chinese Government Scholarship (CSC) can cover tuition, accommodation, and a living stipend for eligible applicants.",
-  },
-  {
-    name: "Norway",
-    to: "/study-in-norway-from-bangladesh",
-    grad: "linear-gradient(135deg,#BA0C2F,#7C0820)",
-    text: "Norway's public universities have historically charged no tuition to international students, only a small semester fee, though this policy is under review for upcoming intakes — confirm the current fee position before accepting an offer. Immigration requires proof of roughly NOK 137,907/year for living costs.",
-  },
-  {
-    name: "Turkey",
-    to: "/study-in-turkey-from-bangladesh",
-    grad: "linear-gradient(135deg,#E30A17,#9E0710)",
-    text: "Turkey's public universities are among the most affordable in the world for international students, roughly USD 100–4,000 per year via the YÖS entrance exam, while private universities range from about USD 2,450 to USD 9,000+ for English-taught programs.",
-  },
-  {
-    name: "Greece",
-    to: "/study-in-greece-from-bangladesh",
-    grad: "linear-gradient(135deg,#0D5EAF,#083E75)",
-    text: "Greek public universities charge non-EU students between €1,500 and €9,000 per year depending on level and program, with a growing number of English-taught options in Athens and Thessaloniki. A Greek national Type D student visa is required before travel.",
-  },
+
+
+/* ---------- Load destinations from the API ---------- */
+const { data: abroadData } = await useApi("/abroads", {
+  key: "abroads-list",
+  transform: (res: any) => res.data,
+});
+
+// Same fallback gradients as before, used when a destination has no image
+const grads = [
+  "linear-gradient(135deg,#436F4D,#2C4A32)",
+  "linear-gradient(135deg,#CF142B,#8E0E1D)",
+  "linear-gradient(135deg,#003580,#002554)",
+  "linear-gradient(135deg,#D57800,#A85E00)",
+  "linear-gradient(135deg,#0032A0,#000C4E)",
+  "linear-gradient(135deg,#DE2910,#9E1D0B)",
 ];
-const loopCountries = [...countries, ...countries]; // second copy = seamless marquee loop
-const countryOptions = [...countries.map((c) => c.name), "Not sure yet"];
+
+const countries = computed<any[]>(() =>
+  ((abroadData.value as any[]) || []).map((a, i) => ({
+    name: a.name.replace(/^Study in\s+/i, ""),
+    to: `/study-abroad/${a.slug}`,
+    img: a.image,
+    alt: a.image_alt,
+    grad: grads[i % grads.length],
+    text: a.description,
+  })),
+);
+
+const loopCountries = computed(() => [...countries.value, ...countries.value]); // second copy = seamless marquee loop
+const countryOptions = computed(() => [
+  ...countries.value.map((c) => c.name),
+  "Not sure yet",
+]);
 
 const processSteps = [
   {
