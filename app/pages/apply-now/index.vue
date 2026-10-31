@@ -56,6 +56,10 @@
               Keep your latest result sheet and English score (if you have one)
               nearby.
             </p>
+            <p v-if="reference" class="sap-lead">
+              Your reference number is <b>{{ reference }}</b
+              >. Quote it if you call or message us.
+            </p>
             <div class="sap-cta-row">
               <NuxtLink class="sap-btn sap-btn-primary" to="/scholarships"
                 >Browse Scholarships
@@ -370,8 +374,13 @@
             </div>
 
             <div v-if="status === 'error'" class="sap-alert" role="alert">
-              <b>We could not send your form.</b> Please check your connection
-              and try again, or send the same details on
+              <b>{{ errorText || "We could not send your form." }}</b>
+              {{
+                errorText
+                  ? "You can also send"
+                  : "Please check your connection and try again, or send"
+              }}
+              the same details on
               <a :href="waLink" target="_blank" rel="noopener">WhatsApp</a> or
               call <a href="tel:+8801911878274">+88 01911 878 274</a>.
             </div>
@@ -516,12 +525,18 @@
 
 <script setup lang="ts">
 /**
- * Free Assessment page (/apply-now): validated lead form, posts to /api/assessment (see server/api/assessment.post.ts).
+ * Free Assessment page (/apply-now).
+ * Submits to the Laravel API: POST {apiBase}/assessment  (the API queues the e-mails, so the reply is instant).
  * Layout already provides <main id="main">, so this page root is a <div>.
  */
 const route = useRoute();
+const config = useRuntimeConfig();
+// NOTE: use the same API base your useApi() / other forms use
+const apiBase = config.public.apiBase;
 
 /* ---------- options ---------- */
+/* The five lists below (levels, englishOptions, budgets, contactVia, offices) must stay
+   IDENTICAL to the constants in App\Models\AssessmentLead: the API only accepts these exact texts. */
 const levels = [
   "Studying in HSC / A-Level",
   "HSC / A-Level completed (bachelor's)",
@@ -536,7 +551,18 @@ const englishOptions = [
   "Test booked or planning to take one",
   "Not sure yet",
 ];
-const countries = [
+const budgets = [
+  "Under BDT 10 lakh",
+  "BDT 10 to 20 lakh",
+  "BDT 20 to 35 lakh",
+  "Above BDT 35 lakh",
+  "Not sure yet",
+];
+const contactVia = ["Phone call", "WhatsApp"];
+const offices = ["Banani, Dhaka", "Sylhet", "Online"];
+
+/* Countries come from the same /study-abroad API as the rest of the site (with a fallback list) */
+const FALLBACK_COUNTRIES = [
   "Italy",
   "Malta",
   "Hungary",
@@ -552,17 +578,23 @@ const countries = [
   "UK",
   "Australia",
   "New Zealand",
-  "Not sure",
 ];
-const budgets = [
-  "Under BDT 10 lakh",
-  "BDT 10 to 20 lakh",
-  "BDT 20 to 35 lakh",
-  "Above BDT 35 lakh",
-  "Not sure yet",
-];
-const contactVia = ["Phone call", "WhatsApp"];
-const offices = ["Banani, Dhaka", "Sylhet", "Online"];
+const { data: destData } = await useApi("/study-abroad", {
+  key: "study-abroad-list",
+  transform: (res: any) => res.data,
+});
+const countries = computed<string[]>(() => {
+  const names = ((destData.value as any[] | null) || [])
+    .map(
+      (c) =>
+        c.short_name ||
+        String(c.name || "")
+          .replace(/^Study in\s+/i, "")
+          .replace(/\s+from Bangladesh$/i, ""),
+    )
+    .filter(Boolean);
+  return [...(names.length ? names : FALLBACK_COUNTRIES), "Not sure"];
+});
 
 const MONTHS = [
   "January",
@@ -712,13 +744,15 @@ const blank = () => ({
 const form = reactive(blank());
 const errors = reactive<Record<string, string>>({});
 const status = ref<"idle" | "sending" | "success" | "error">("idle");
+const reference = ref<string | null>(null);
+const errorText = ref("");
 
 const firstName = computed(() => form.fullName.split(" ")[0] || "there");
 
 /* pre-select a country when linked as /apply-now?country=Italy */
 onMounted(() => {
   const q = String(route.query.country || "").toLowerCase();
-  const match = countries.find((c) => c.toLowerCase() === q);
+  const match = countries.value.find((c) => c.toLowerCase() === q);
   if (match && !form.countries.includes(match)) form.countries.push(match);
 });
 
@@ -740,6 +774,18 @@ const waLink = computed(() => {
   return `https://wa.me/8801811156665?text=${encodeURIComponent(lines.join("\n"))}`;
 });
 
+/* scroll to + focus the first field that has an error */
+function focusFirstError() {
+  const first = Object.keys(errors)[0];
+  if (!first) return;
+  nextTick(() => {
+    const id = first === "countries" ? "l-countries" : `f-${first}`;
+    const target = document.getElementById(id);
+    target?.scrollIntoView({ behavior: "smooth", block: "center" });
+    (target as HTMLElement | null)?.focus?.({ preventScroll: true });
+  });
+}
+
 function validate() {
   Object.keys(errors).forEach((k) => delete errors[k]);
   if (form.fullName.length < 2)
@@ -753,17 +799,17 @@ function validate() {
     errors.countries = 'Choose at least one country, or "Not sure".';
   if (!form.consent)
     errors.consent = "Please tick this box so we can contact you.";
-  const first = Object.keys(errors)[0];
-  if (first) {
-    nextTick(() => {
-      const id = first === "countries" ? "l-countries" : `f-${first}`;
-      const target = document.getElementById(id);
-      target?.scrollIntoView({ behavior: "smooth", block: "center" });
-      (target as HTMLElement | null)?.focus?.({ preventScroll: true });
-    });
-  }
-  return !first;
+  focusFirstError();
+  return Object.keys(errors).length === 0;
 }
+
+/* API field names (snake_case) -> form field names */
+const FIELD_MAP: Record<string, string> = {
+  full_name: "fullName",
+  contact_via: "contactVia",
+};
+/* fields that have an error message slot in the form */
+const SHOWN = ["fullName", "phone", "email", "level", "countries", "consent"];
 
 async function submit() {
   if (status.value === "sending") return;
@@ -773,25 +819,78 @@ async function submit() {
     return;
   } // honeypot filled: pretend success, send nothing
   status.value = "sending";
+  errorText.value = "";
   try {
-    await $fetch("/api/assessment", {
+    const res: any = await $fetch(`${apiBase}/assessment`, {
       method: "POST",
-      body: { ...form, phone: cleanPhone(), page: route.fullPath },
+      headers: { Accept: "application/json" },
+      body: {
+        full_name: form.fullName,
+        phone: cleanPhone(),
+        email: form.email,
+        level: form.level,
+        result: form.result,
+        english: form.english,
+        countries: form.countries,
+        intake: form.intake,
+        budget: form.budget,
+        contact_via: form.contactVia,
+        office: form.office,
+        message: form.message,
+        consent: form.consent,
+        website: form.website,
+        page: route.fullPath,
+      },
     });
+    reference.value = res?.data?.reference || null;
     status.value = "success";
     nextTick(() =>
       document
         .getElementById("apply-form")
         ?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
-  } catch {
-    status.value = "error";
+  } catch (e: any) {
+    const code = e?.statusCode ?? e?.response?.status;
+    const body = e?.data ?? e?.response?._data;
+    // Debug: shows the real reason in the browser console
+    console.error("[apply-now] failed", code, body || e);
+
+    if (code === 422 && body?.errors) {
+      Object.keys(errors).forEach((k) => delete errors[k]);
+      Object.entries(body.errors as Record<string, string[]>).forEach(
+        ([key, msgs]) => {
+          const base = key.split(".")[0];
+          const field = FIELD_MAP[base] || base;
+          if (!errors[field])
+            errors[field] = Array.isArray(msgs) ? msgs[0] : String(msgs);
+        },
+      );
+      // errors on fields without a message slot would be invisible, so show them in the alert
+      const hidden = Object.entries(errors)
+        .filter(([k]) => !SHOWN.includes(k))
+        .map(([, m]) => m);
+      if (hidden.length) {
+        errorText.value = hidden.join(" ");
+        status.value = "error";
+      } else {
+        status.value = "idle";
+      }
+      focusFirstError();
+    } else if (code === 429) {
+      errorText.value =
+        "Too many requests. Please wait a few minutes and try again.";
+      status.value = "error";
+    } else {
+      status.value = "error";
+    }
   }
 }
 
 function resetForm() {
   Object.assign(form, blank());
   Object.keys(errors).forEach((k) => delete errors[k]);
+  reference.value = null;
+  errorText.value = "";
   status.value = "idle";
 }
 </script>
