@@ -156,12 +156,8 @@
               >
                 {{ open[s.id] ? "Show less" : "Read more" }}
               </button>
-              <component
-                :is="s.link.internal ? 'NuxtLink' : 'a'"
-                v-if="s.link.url"
-                class="ssp-card-link"
-              >
-                {{ s.link.label }}
+              <NuxtLink class="ssp-card-link" :to="`/scholarships/${s.slug}`">
+                View full details
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -170,27 +166,7 @@
                 >
                   <path d="M5 12h14M13 6l6 6-6 6" />
                 </svg>
-              </component>
-              <!-- <component
-                :is="s.link.internal ? 'NuxtLink' : 'a'"
-                v-if="s.link.url"
-                class="ssp-card-link"
-                v-bind="
-                  s.link.internal
-                    ? { to: s.link.url }
-                    : { href: s.link.url, target: '_blank', rel: 'noopener' }
-                "
-              >
-                {{ s.link.label }}
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2.4"
-                >
-                  <path d="M5 12h14M13 6l6 6-6 6" />
-                </svg>
-              </component> -->
+              </NuxtLink>
             </div>
           </article>
         </div>
