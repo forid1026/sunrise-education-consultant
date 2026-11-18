@@ -12113,3 +12113,49 @@ fieldset.srp-group {
 html {
   scrollbar-gutter: stable;
 }
+/* ===================== Page skeleton (shown while a route loads) ===================== */
+.pk {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #fff;
+  overflow: hidden;
+  padding-top: 110px;
+}
+.pk-wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+.pk-hero { background: var(--sec-offwhite, #FBFAF7); padding: 56px 0 48px; }
+.pk-body { padding-top: 40px; }
+.pk-b {
+  display: block;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #eceef1 25%, #f6f7f9 37%, #eceef1 63%);
+  background-size: 400% 100%;
+  animation: pk-shimmer 1.4s ease infinite;
+}
+.pk-pill { width: 150px; height: 26px; border-radius: 99px; margin-bottom: 22px; }
+.pk-h1 { width: min(640px, 90%); height: 40px; margin-bottom: 14px; }
+.pk-h1-s { width: min(420px, 70%); }
+.pk-h2 { width: 260px; height: 28px; margin-bottom: 24px; }
+.pk-line { width: 100%; height: 14px; margin: 10px 0; }
+.pk-line-s { width: 60%; }
+.pk-hero .pk-line { width: min(560px, 90%); }
+.pk-hero .pk-line-s { width: min(380px, 60%); }
+.pk-row { display: flex; gap: 12px; margin-top: 26px; }
+.pk-btn { width: 160px; height: 46px; border-radius: 99px; }
+.pk-btn-o { width: 130px; opacity: .7; }
+.pk-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.pk-card { border: 1px solid var(--sec-line, #E7E9EC); border-radius: 14px; padding: 14px; }
+.pk-img { height: 150px; border-radius: 10px; margin-bottom: 12px; }
+.pk-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+@keyframes pk-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+.pk-fade-enter-active, .pk-fade-leave-active { transition: opacity .18s ease; }
+.pk-fade-enter-from, .pk-fade-leave-to { opacity: 0; }
+@media (max-width: 900px) {
+  .pk { padding-top: 80px; }
+  .pk-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .pk-grid { grid-template-columns: 1fr; }
+  .pk-hero { padding: 36px 0 32px; }
+}
+@media (prefers-reduced-motion: reduce) { .pk-b { animation: none; } }
