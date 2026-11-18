@@ -213,12 +213,12 @@
   </header>
 </template>
 
-<script setup lang="ts">
+<script setup>
 /**
  * Site header: mega menu (hover on desktop, tap on mobile), sticky shrink on scroll,
  * mobile drawer + accordions. Study Abroad and Services menus come from the API.
  */
-const root = ref<HTMLElement | null>(null);
+const root = ref(null);
 const route = useRoute();
 
 const PHONE =
@@ -227,8 +227,8 @@ const PHONE =
 /* ---------- Study Abroad (dynamic mega menu + drawer) ---------- */
 // Keep `await` (not lazy) so the lists are rendered before onMounted wires the toggles.
 const { data: abroadsData } = await useApi("/study-abroad", {
-  key: "abroads-list",
-  transform: (res: any) => res.data,
+  key: "study-abroad-list",
+  transform: (res) => res.data,
 });
 
 const REGIONS = [
@@ -240,7 +240,7 @@ const REGIONS = [
 ];
 
 const abroadGroups = computed(() => {
-  const list = (abroadsData.value as any[] | null) || [];
+  const list = (abroadsData.value) || [];
   return REGIONS.map((r) => ({
     ...r,
     items: list.filter((a) => a.region === r.key),
@@ -250,16 +250,16 @@ const abroadGroups = computed(() => {
 /* ---------- Services (dynamic dropdown + drawer) ---------- */
 const { data: servicesData } = await useApi("/services", {
   key: "services-list",
-  transform: (res: any) => res.data,
+  transform: (res) => res.data,
 });
-const services = computed<any[]>(() =>
-  ((servicesData.value as any[] | null) || [])
+const services = computed(() =>
+  ((servicesData.value) || [])
     .slice()
-    .sort((a: any, b: any) => (a.position ?? 0) - (b.position ?? 0)),
+    .sort((a, b) => (a.position ?? 0) - (b.position ?? 0)),
 );
 
 /* API `icon` value -> SVG path(s). Add new icons here. */
-const ICONS: Record<string, string[]> = {
+const ICONS = {
   document: [
     "M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z",
     "M8 8h8M8 12h8M8 16h5",
@@ -272,7 +272,7 @@ const ICONS: Record<string, string[]> = {
     "M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2",
   ],
 };
-const ICON_ALIAS: Record<string, string> = {
+const ICON_ALIAS = {
   accommodation: "home",
   housing: "home",
   travel: "plane",
@@ -285,7 +285,7 @@ const ICON_ALIAS: Record<string, string> = {
   admission: "graduation",
   visa: "document",
 };
-const iconPaths = (name?: string | null): string[] => {
+const iconPaths = (name) => {
   const key = String(name || "").toLowerCase();
   return ICONS[key] || ICONS[ICON_ALIAS[key]] || ICONS.document;
 };
@@ -366,24 +366,24 @@ const resourceLinks = [
 ];
 
 /* ---------- Behaviour ---------- */
-let closeAll: (except?: Element | null) => void = () => {};
-let setMenu: (open: boolean) => void = () => {};
-const cleanups: Array<() => void> = [];
+let closeAll = () => {};
+let setMenu = () => {};
+const cleanups = [];
 
 onMounted(() => {
   const h = root.value;
   if (!h) return;
   const on = (
-    t: Document | Window | Element,
-    ev: string,
-    fn: (e: any) => void,
-    opts?: AddEventListenerOptions,
+    t,
+    ev,
+    fn,
+    opts,
   ) => {
     t.addEventListener(ev, fn, opts);
     cleanups.push(() => t.removeEventListener(ev, fn, opts));
   };
 
-  const items = Array.from(h.querySelectorAll<HTMLElement>(".sh-has-drop"));
+  const items = Array.from(h.querySelectorAll(".sh-has-drop"));
   const desk = window.matchMedia("(min-width:1025px)");
 
   closeAll = (except) => {
@@ -395,10 +395,10 @@ onMounted(() => {
     });
   };
 
-  items.forEach((it: any) => {
-    const btn = it.querySelector(".sh-tog") as HTMLElement | null;
+  items.forEach((it) => {
+    const btn = it.querySelector(".sh-tog");
     if (!btn) return; // no API data: only the link remains
-    let t: ReturnType<typeof setTimeout>;
+    let t;
     on(it, "mouseenter", () => {
       if (!desk.matches) return;
       clearTimeout(t);
@@ -414,7 +414,7 @@ onMounted(() => {
         btn.setAttribute("aria-expanded", "false");
       }, 140);
     });
-    on(btn, "click", (e: Event) => {
+    on(btn, "click", (e) => {
       e.stopPropagation();
       const o =
         !it.classList.contains("is-open") || Date.now() - (it._hov || 0) < 700;
@@ -424,10 +424,10 @@ onMounted(() => {
     });
   });
 
-  on(document, "click", (e: Event) => {
-    if (!h.contains(e.target as Node)) closeAll();
+  on(document, "click", (e) => {
+    if (!h.contains(e.target)) closeAll();
   });
-  on(document, "keydown", (e: KeyboardEvent) => {
+  on(document, "keydown", (e) => {
     if (e.key === "Escape") {
       closeAll();
       setMenu(false);
@@ -440,7 +440,7 @@ onMounted(() => {
   onScroll();
 
   /* mobile drawer */
-  const burger = h.querySelector(".sh-burger") as HTMLElement;
+  const burger = h.querySelector(".sh-burger");
   setMenu = (o) => {
     h.classList.toggle("is-menu", o);
     burger.setAttribute("aria-expanded", String(o));
@@ -452,7 +452,7 @@ onMounted(() => {
   );
   h.querySelectorAll(".sh-acc-head>button").forEach((b) =>
     on(b, "click", () => {
-      const o = (b.closest(".sh-acc") as HTMLElement).classList.toggle("is-open");
+      const o = (b.closest(".sh-acc")).classList.toggle("is-open");
       b.setAttribute("aria-expanded", String(o));
     }),
   );

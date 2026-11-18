@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 /* ------------------------------------------------------------ constants */
 const config = useRuntimeConfig();
 const siteUrl =
@@ -204,15 +204,7 @@ const trustList = [
   { label: "Email", value: "info@sunrise-bd.net" },
   { label: "CEO", value: "ceo@sunrise-bd.net" },
 ];
-
-interface Faq {
-  q: string;
-  a: string;
-  extra?: string;
-  extraTo?: string;
-  extraLink?: string;
-}
-const faqs: Faq[] = [
+const faqs = [
   {
     q: "What are Sunrise Education Consultants' office hours?",
     a: "The Banani office in Dhaka is open Saturday to Thursday from 10:00 am to 6:00 pm and closed on Friday. Please call before visiting the Sylhet branch or on public holidays.",
@@ -247,11 +239,11 @@ const faqs: Faq[] = [
 ];
 
 /* ------------------------------------------------------------ office status (Dhaka time) */
-const status = reactive<{ open: boolean | null; friday: boolean }>({
+const status = reactive({
   open: null,
   friday: false,
 });
-let statusTimer: ReturnType<typeof setInterval> | undefined;
+let statusTimer;
 function updateStatus() {
   try {
     const parts = new Intl.DateTimeFormat("en-GB", {
@@ -261,7 +253,7 @@ function updateStatus() {
       minute: "2-digit",
       hour12: false,
     }).formatToParts(new Date());
-    const get = (t: string) => parts.find((p) => p.type === t)?.value || "";
+    const get = (t) => parts.find((p) => p.type === t)?.value || "";
     const day = get("weekday");
     const mins =
       (parseInt(get("hour"), 10) % 24) * 60 + parseInt(get("minute"), 10);
@@ -283,7 +275,7 @@ const form = reactive({
   message: "",
 });
 const sending = ref(false);
-const result = ref<"idle" | "ok" | "error">("idle");
+const result = ref("idle");
 async function submitForm() {
   if (sending.value) return;
   sending.value = true;
@@ -324,9 +316,9 @@ useSeoMeta({
 
 const logo = siteUrl + "upload/logo/sunrise-logo.png";
 const contactPoint = (
-  tel: string,
-  type: string,
-  extra: Record<string, unknown> = {},
+  tel,
+  type,
+  extra = {},
 ) => ({
   "@type": "ContactPoint",
   contactType: type,
@@ -461,11 +453,11 @@ useHead({
 });
 
 /* ------------------------------------------------------------ lifecycle */
-let io: IntersectionObserver | null = null;
+let io = null;
 onMounted(() => {
   updateStatus();
   statusTimer = setInterval(updateStatus, 60_000);
-  const els = document.querySelectorAll<HTMLElement>(".scp .scp-reveal");
+  const els = document.querySelectorAll(".scp .scp-reveal");
   if ("IntersectionObserver" in window) {
     io = new IntersectionObserver(
       (entries) =>
@@ -477,7 +469,7 @@ onMounted(() => {
         }),
       { threshold: 0.1 },
     );
-    els.forEach((el) => io!.observe(el));
+    els.forEach((el) => io.observe(el));
   } else {
     els.forEach((el) => el.classList.add("is-in"));
   }

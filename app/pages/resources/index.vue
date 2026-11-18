@@ -1644,18 +1644,18 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 /**
  * Resources page: guide filter, BDT budget calculator, intake timeline planner,
  * document checklist (saved in localStorage) and scroll reveal.
  * Markup is static; behaviour is wired in onMounted (same approach as SiteHeader / SiteFooter).
  * Layout already provides <main id="main">, so this page root is a <div>.
  */
-const root = ref<HTMLElement | null>(null);
+const root = ref(null);
 const router = useRouter();
 
-const cleanups: Array<() => void> = [];
-let io: IntersectionObserver | null = null;
+const cleanups = [];
+let io = null;
 
 /* ---------- SEO ---------- */
 const schema = {
@@ -2030,17 +2030,17 @@ onMounted(() => {
   const r = root.value;
   if (!r) return;
 
-  const on = (t: Element, ev: string, fn: (e: any) => void) => {
+  const on = (t, ev, fn) => {
     t.addEventListener(ev, fn);
     cleanups.push(() => t.removeEventListener(ev, fn));
   };
-  const el = <T extends HTMLElement = HTMLElement>(id: string) =>
-    r.querySelector("#" + id) as T;
-  const fmt = (n: number) => Math.round(n).toLocaleString("en-IN");
+  const el = (id) =>
+    r.querySelector("#" + id);
+  const fmt = (n) => Math.round(n).toLocaleString("en-IN");
 
   /* ---- topic filter ---- */
-  const tabs = r.querySelectorAll<HTMLElement>(".srp-tab");
-  const cards = r.querySelectorAll<HTMLElement>(".srp-card");
+  const tabs = r.querySelectorAll(".srp-tab");
+  const cards = r.querySelectorAll(".srp-card");
   tabs.forEach((t) =>
     on(t, "click", () => {
       tabs.forEach((x) => {
@@ -2057,9 +2057,9 @@ onMounted(() => {
   );
 
   /* ---- read more ---- */
-  r.querySelectorAll<HTMLElement>(".srp-more").forEach((b) =>
+  r.querySelectorAll(".srp-more").forEach((b) =>
     on(b, "click", () => {
-      const c = b.closest(".srp-card") as HTMLElement;
+      const c = b.closest(".srp-card");
       const o = c.classList.toggle("is-open");
       b.setAttribute("aria-expanded", String(o));
       b.textContent = o ? "Show less" : "Read more";
@@ -2067,8 +2067,8 @@ onMounted(() => {
   );
 
   /* ---- budget calculator ---- */
-  const cur = el<HTMLSelectElement>("c-cur");
-  const num = (id: string) => +el<HTMLInputElement>(id).value || 0;
+  const cur = el("c-cur");
+  const num = (id) => +el(id).value || 0;
   const calc = () => {
     const code = cur.value;
     const rate = num("c-rate");
@@ -2091,7 +2091,7 @@ onMounted(() => {
       `About BDT ${fmt(total / mon)} per month over ${mon} months`;
   };
   on(cur, "change", () => {
-    el<HTMLInputElement>("c-rate").value =
+    el("c-rate").value =
       cur.options[cur.selectedIndex].getAttribute("data-r") || "0";
     calc();
   });
@@ -2116,7 +2116,7 @@ onMounted(() => {
     "December",
   ];
   // [months before intake, step text, internal link, link label]
-  const steps: Array<[number, string, string?, string?]> = [
+  const steps = [
     [12, "Free assessment and country shortlist", "/apply-now", "Book"],
     [11, "Book IELTS or PTE, or request your MOI certificate"],
     [
@@ -2161,8 +2161,8 @@ onMounted(() => {
     [0, "Arrive, register and start your classes"],
   ];
   const plan = () => {
-    const m = +el<HTMLSelectElement>("t-mon").value;
-    const y = +el<HTMLSelectElement>("t-yr").value;
+    const m = +el("t-mon").value;
+    const y = +el("t-yr").value;
     el("t-label").textContent = `${M[m]} ${y}`;
     el("t-plan").innerHTML = steps
       .map(([back, text, href, label]) => {
@@ -2174,8 +2174,8 @@ onMounted(() => {
   on(el("t-mon"), "change", plan);
   on(el("t-yr"), "change", plan);
   /* links are injected as HTML, so route them through vue-router (no full page reload) */
-  on(el("t-plan"), "click", (e: Event) => {
-    const a = (e.target as HTMLElement).closest("a");
+  on(el("t-plan"), "click", (e) => {
+    const a = (e.target).closest("a");
     const href = a?.getAttribute("href");
     if (href && href.startsWith("/")) {
       e.preventDefault();
@@ -2186,10 +2186,10 @@ onMounted(() => {
 
   /* ---- document checklist (progress saved in this browser only) ---- */
   const KEY = "sunrise-doc-checklist";
-  const boxes = r.querySelectorAll<HTMLInputElement>(
+  const boxes = r.querySelectorAll(
     "#ck-list input[type=checkbox]",
   );
-  let saved: Record<string, boolean> = {};
+  let saved = {};
   try {
     saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {};
   } catch {
@@ -2204,7 +2204,7 @@ onMounted(() => {
     el("ck-count").textContent = `${n} of ${boxes.length} ready`;
   };
   boxes.forEach((b) => {
-    const k = b.getAttribute("data-k") as string;
+    const k = b.getAttribute("data-k");
     if (saved[k]) b.checked = true;
     on(b, "change", () => {
       saved[k] = b.checked;
@@ -2228,7 +2228,7 @@ onMounted(() => {
   upd();
 
   /* ---- reveal on scroll ---- */
-  const els = r.querySelectorAll<HTMLElement>(".srp-reveal");
+  const els = r.querySelectorAll(".srp-reveal");
   if ("IntersectionObserver" in window) {
     io = new IntersectionObserver(
       (es) =>

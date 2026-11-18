@@ -66,14 +66,15 @@
   </NuxtLayout>
 </template>
 
-<script setup lang="ts">
-import type { NuxtError } from "#app";
+<script setup>
 
 /**
  * Custom error page (404 + any other error). Place this file at the project root, next to app.vue.
  * Nuxt sends the correct HTTP status (404 / 500) automatically on SSR.
  */
-const props = defineProps<{ error: NuxtError }>();
+const props = defineProps({
+  error: { type: Object, required: true },
+});
 const route = useRoute();
 
 const is404 = computed(() => props.error?.statusCode === 404);

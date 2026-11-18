@@ -25,18 +25,10 @@
           <div class="sf-col">
             <h3 class="sf-h">Top Destinations</h3>
             <ul class="sf-links sf-dest">
-              <li><NuxtLink to="/study-abroad/italy">Italy</NuxtLink></li>
-              <li><NuxtLink to="/study-in-malta-from-bangladesh">Malta</NuxtLink></li>
-              <li><NuxtLink to="/study-in-hungary-from-bangladesh">Hungary</NuxtLink></li>
-              <li><NuxtLink to="/study-in-finland-from-bangladesh">Finland</NuxtLink></li>
-              <li><NuxtLink to="/study-in-cyprus-from-bangladesh">Cyprus</NuxtLink></li>
-              <li><NuxtLink to="/study-in-malaysia">Malaysia</NuxtLink></li>
-              <li><NuxtLink to="/study-abroad/study-in-canada">Canada</NuxtLink></li>
-              <li><NuxtLink to="/study-abroad/study-in-usa">USA</NuxtLink></li>
-              <li><NuxtLink to="/study-in-china">China</NuxtLink></li>
-              <li><NuxtLink to="/study-in-norway-from-bangladesh">Norway</NuxtLink></li>
-              <li><NuxtLink to="/study-in-turkey-from-bangladesh">Turkey</NuxtLink></li>
-              <li><NuxtLink to="/study-in-greece-from-bangladesh">Greece</NuxtLink></li>
+              <li v-for="d in destinations" :key="d.slug">
+                <NuxtLink :to="`/study-abroad/${d.slug}`">{{ d.short_name || String(d.name || '').replace(/^Study in\s+/i, '').replace(/\s+from Bangladesh$/i, '') }}</NuxtLink>
+              </li>
+              <li v-if="!destinations.length"><NuxtLink to="/study-abroad">All destinations</NuxtLink></li>
             </ul>
           </div>
 
@@ -59,7 +51,7 @@
             <ul class="sf-links">
               <li><NuxtLink to="/about-us">About Us</NuxtLink></li>
               <li><NuxtLink to="/scholarships">Scholarships</NuxtLink></li>
-              <li><NuxtLink to="/success-stories">Success Stories</NuxtLink></li>
+              <li><NuxtLink to="/success-story">Success Stories</NuxtLink></li>
               <li><NuxtLink to="/blog">Blog</NuxtLink></li>
               <li><NuxtLink to="/staff">Our Team</NuxtLink></li>
               <li><NuxtLink to="/career">Careers</NuxtLink></li>
@@ -114,9 +106,16 @@
   </footer>
 </template>
 
-<script setup lang="ts">
+<script setup>
 /** Site footer: copyright year, column reveal on scroll, back-to-top button with progress ring. */
-const root = ref<HTMLElement | null>(null)
+const root = ref(null)
+
+/* Destinations come from the same API/cache key as the header, so links always match real slugs */
+const { data: destData } = await useApi('/study-abroad', {
+  key: 'study-abroad-list',
+  transform: (res) => res.data,
+})
+const destinations = computed(() => (destData.value || []).slice(0, 12))
 const route = useRoute()
 
 const year = new Date().getFullYear()
@@ -125,7 +124,7 @@ const showTop = ref(false)
 const RING = 150.8
 const dashOffset = ref(RING)
 
-let io: IntersectionObserver | null = null
+let io = null
 const tick = () => {
   const el = document.documentElement
   const max = el.scrollHeight - el.clientHeight

@@ -60,8 +60,7 @@
         <p class="sec-subtitle">
           Sunrise Education Consultants is one of the leading study abroad
           consultants in Bangladesh, guiding students through admissions,
-          scholarships, and visa processing for the USA, UK, Canada, Australia,
-          New Zealand, Italy, and more.
+          scholarships, and visa processing for {{ heroCountriesText }}.
         </p>
         <div class="sec-cta-row">
           <NuxtLink to="/apply-now" class="sec-btn sec-btn-primary">
@@ -700,7 +699,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 /* ---------------------------------------------------------------- SEO */
 const siteUrl = "https://sunrise-bd.net/";
 const pageTitle =
@@ -731,22 +730,6 @@ const aboutPhoto =
 const whatsappUrl =
   "https://api.whatsapp.com/send?phone=8801811156665&text=" +
   encodeURIComponent("Welcome To Sunrise Education Consultants");
-
-const heroStats = [
-  { count: 12, suffix: "+", label: "Years Experience" },
-  { count: 2500, suffix: "+", label: "Students Placed" },
-  { count: 80, suffix: "%", label: "Visa Success Rate" },
-  { count: 15, suffix: "+", label: "Countries Covered" },
-];
-const heroDestinations = [
-  "USA",
-  "UK",
-  "Canada",
-  "Australia",
-  "Italy",
-  "New Zealand",
-  "+9 more",
-];
 
 const aboutPoints = [
   {
@@ -798,9 +781,9 @@ const imgBase = "https://studyitalybd.com/wp-content/uploads/2026/08/";
 
 
 /* ---------- Load destinations from the API ---------- */
-const { data: abroadData } = await useApi("/abroads", {
-  key: "abroads-list",
-  transform: (res: any) => res.data,
+const { data: abroadData } = await useApi("/study-abroad", {
+  key: "study-abroad-list",
+  transform: (res) => res.data,
 });
 
 // Same fallback gradients as before, used when a destination has no image
@@ -813,8 +796,8 @@ const grads = [
   "linear-gradient(135deg,#DE2910,#9E1D0B)",
 ];
 
-const countries = computed<any[]>(() =>
-  ((abroadData.value as any[]) || []).map((a, i) => ({
+const countries = computed(() =>
+  ((abroadData.value) || []).map((a, i) => ({
     name: a.name.replace(/^Study in\s+/i, ""),
     to: `/study-abroad/${a.slug}`,
     img: a.image,
@@ -823,6 +806,45 @@ const countries = computed<any[]>(() =>
     text: a.description,
   })),
 );
+
+/* Hero destination line: country names (short_name) come from the study-abroad API */
+const HERO_MAX = 6;
+const heroNames = computed(() =>
+  (abroadData.value || [])
+    .map((a) => a.short_name || String(a.name || "").replace(/^Study in\s+/i, "").replace(/\s+from Bangladesh$/i, ""))
+    .filter(Boolean),
+);
+const heroCountriesText = computed(() => {
+  const n = heroNames.value.slice(0, HERO_MAX);
+  if (!n.length) return "the USA, UK, Canada, Australia, New Zealand, Italy, and more";
+  const more = heroNames.value.length > HERO_MAX;
+  if (n.length === 1) return n[0];
+  const head = n.slice(0, -1).join(", ");
+  return more ? `${n.join(", ")}, and more` : `${head} and ${n[n.length - 1]}`;
+});
+const heroStatsBase = [
+  { count: 12, suffix: "+", label: "Years Experience" },
+  { count: 2500, suffix: "+", label: "Students Placed" },
+  { count: 80, suffix: "%", label: "Visa Success Rate" },
+  { count: 15, suffix: "+", label: "Countries Covered", dynamic: true },
+];
+/* "Countries Covered" shows the real number of destinations from the API (falls back to 15+) */
+const heroStats = computed(() =>
+  heroStatsBase.map((s) =>
+    s.dynamic && heroNames.value.length
+      ? { ...s, count: heroNames.value.length, suffix: "" }
+      : s,
+  ),
+);
+
+const heroDestinations = computed(() => {
+  const list = (abroadData.value || [])
+    .map((a) => a.short_name || String(a.name || "").replace(/^Study in\s+/i, "").replace(/\s+from Bangladesh$/i, ""))
+    .filter(Boolean);
+  const out = list.slice(0, HERO_MAX);
+  if (list.length > HERO_MAX) out.push(`+${list.length - HERO_MAX} more`);
+  return out;
+});
 
 const loopCountries = computed(() => [...countries.value, ...countries.value]); // second copy = seamless marquee loop
 const countryOptions = computed(() => [
@@ -855,22 +877,21 @@ const processSteps = [
 
 
 /* ---------- Load success stories from the API ---------- */
-/* ---------- Load success stories from the API ---------- */
 const { data: storyData } = await useApi("/success-stories", {
   key: "stories-list",
-  transform: (res: any) => res.data,
+  transform: (res) => res.data,
 });
-const stories = computed<any[]>(() => (storyData.value as any[]) || []);
+const stories = computed(() => (storyData.value) || []);
 const loopStories = computed(() => [...stories.value, ...stories.value]);
 
 /* ---------- Load upcoming events from the API ---------- */
 const { data: eventData } = await useApi("/events", {
   key: "events-upcoming",
   query: { type: "upcoming" },
-  transform: (res: any) => res.data,
+  transform: (res) => res.data,
 });
-const events = computed<any[]>(() =>
-  ((eventData.value as any[]) || []).slice(0, 3).map((e) => ({
+const events = computed(() =>
+  ((eventData.value) || []).slice(0, 3).map((e) => ({
     ...e,
     day: eventDate(e.date).day,
     month: eventDate(e.date).month,
@@ -881,17 +902,17 @@ const events = computed<any[]>(() =>
 // Team comes from the API (same key as the staff page, so it is cached)
 const { data: teamData } = await useApi("/staff", {
   key: "staff-list",
-  transform: (res: any) => res.data,
+  transform: (res) => res.data,
 });
-const team = computed<any[]>(() => (teamData.value as any[]) || []);
+const team = computed(() => (teamData.value) || []);
 
 /* ---------- Load FAQs from the API ---------- */
 const { data: faqData } = await useApi("/faqs", {
   key: "faqs-home",
   query: { group: "general" },
-  transform: (res: any) => res.data,
+  transform: (res) => res.data,
 });
-const faqs = computed<any[]>(() => (faqData.value as any[]) || []);
+const faqs = computed(() => (faqData.value) || []);
 
 const openFaq = ref(0);
 
@@ -992,19 +1013,19 @@ useHead({
 });
 
 /* ---------------------------------------------------------------- client behaviour */
-const heroEl = ref<HTMLElement | null>(null);
-const svgEl = ref<SVGSVGElement | null>(null);
-const pathsG = ref<SVGGElement | null>(null);
-const destsG = ref<SVGGElement | null>(null);
-const planeEl = ref<SVGGElement | null>(null);
-const pulseEl = ref<HTMLElement | null>(null);
-const countriesViewport = ref<HTMLElement | null>(null);
-const countriesTrack = ref<HTMLElement | null>(null);
-const storiesViewport = ref<HTMLElement | null>(null);
-const storiesTrack = ref<HTMLElement | null>(null);
+const heroEl = ref(null);
+const svgEl = ref(null);
+const pathsG = ref(null);
+const destsG = ref(null);
+const planeEl = ref(null);
+const pulseEl = ref(null);
+const countriesViewport = ref(null);
+const countriesTrack = ref(null);
+const storiesViewport = ref(null);
+const storiesTrack = ref(null);
 
-const cleanups: Array<() => void> = [];
-const timers: number[] = [];
+const cleanups = [];
+const timers = [];
 
 const heroDests = [
   { name: "ITALY", fx: 0.64, fy: 0.1 },
@@ -1014,19 +1035,19 @@ const heroDests = [
   { name: "NEW ZEALAND", fx: 0.8, fy: 0.88 },
 ];
 
-function initHero(reduceMotion: boolean) {
+function initHero(reduceMotion) {
   const hero = heroEl.value,
     svg = svgEl.value,
     paths = pathsG.value,
     dests = destsG.value;
   const plane = planeEl.value,
     pulse = pulseEl.value;
-  const btn = hero?.querySelector(".sec-btn-primary") as HTMLElement | null;
+  const btn = hero?.querySelector(".sec-btn-primary");
   if (!hero || !svg || !paths || !dests || !plane || !pulse || !btn) return;
   let firstRun = true;
   const NS = "http://www.w3.org/2000/svg";
 
-  const buildPath = (ox: number, oy: number, dx: number, dy: number) => {
+  const buildPath = (ox, oy, dx, dy) => {
     const c1x = ox + (dx - ox) * 0.42;
     const c1y = oy - Math.abs(oy - dy) * 0.55 - 20;
     const c2x = ox + (dx - ox) * 0.78;
@@ -1098,7 +1119,7 @@ function initHero(reduceMotion: boolean) {
         ),
       );
       if (dest.plane) {
-        (plane.style as any).offsetPath = `path('${d}')`;
+        (plane.style).offsetPath = `path('${d}')`;
         if (!reduceMotion)
           timers.push(
             window.setTimeout(
@@ -1112,7 +1133,7 @@ function initHero(reduceMotion: boolean) {
   };
 
   layout();
-  let rt: number;
+  let rt;
   const onResize = () => {
     clearTimeout(rt);
     rt = window.setTimeout(layout, 150);
@@ -1124,16 +1145,16 @@ function initHero(reduceMotion: boolean) {
   });
 
   /* count-up stats */
-  const nums = hero.querySelectorAll<HTMLElement>(".sec-stat-num");
-  const animateCount = (el: HTMLElement) => {
+  const nums = hero.querySelectorAll(".sec-stat-num");
+  const animateCount = (el) => {
     const target = parseInt(el.dataset.count || "0", 10);
     const suffix = el.dataset.suffix || "";
     if (reduceMotion) {
       el.textContent = target + suffix;
       return;
     }
-    let start: number | null = null;
-    const step = (ts: number) => {
+    let start = null;
+    const step = (ts) => {
       if (start === null) start = ts;
       const p = Math.min((ts - start) / 1400, 1);
       el.textContent = Math.floor((1 - Math.pow(1 - p, 3)) * target) + suffix;
@@ -1146,7 +1167,7 @@ function initHero(reduceMotion: boolean) {
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            animateCount(e.target as HTMLElement);
+            animateCount(e.target);
             io.unobserve(e.target);
           }
         });
@@ -1160,17 +1181,17 @@ function initHero(reduceMotion: boolean) {
 
 /* 3D auto-scrolling marquee shared by countries + stories */
 function initMarquee(
-  viewport: HTMLElement | null,
-  track: HTMLElement | null,
-  speed: number,
+  viewport,
+  track,
+  speed,
 ) {
   if (!viewport || !track) return;
-  const cards = Array.from(track.children) as HTMLElement[];
+  const cards = Array.from(track.children);
   const maxTilt = 22,
     minScale = 0.86,
     minOpacity = 0.55;
   let posX = 0,
-    lastTs: number | null = null,
+    lastTs = null,
     paused = false,
     half = 0,
     raf = 0;
@@ -1204,7 +1225,7 @@ function initMarquee(
       card.style.zIndex = String(Math.round((1 - a) * 40));
     });
   };
-  const step = (ts: number) => {
+  const step = (ts) => {
     if (lastTs === null) lastTs = ts;
     const dt = (ts - lastTs) / 1000;
     lastTs = ts;

@@ -523,7 +523,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup>
 /**
  * Free Assessment page (/apply-now).
  * Submits to the Laravel API: POST {apiBase}/assessment  (the API queues the e-mails, so the reply is instant).
@@ -581,10 +581,10 @@ const FALLBACK_COUNTRIES = [
 ];
 const { data: destData } = await useApi("/study-abroad", {
   key: "study-abroad-list",
-  transform: (res: any) => res.data,
+  transform: (res) => res.data,
 });
-const countries = computed<string[]>(() => {
-  const names = ((destData.value as any[] | null) || [])
+const countries = computed(() => {
+  const names = ((destData.value) || [])
     .map(
       (c) =>
         c.short_name ||
@@ -612,7 +612,7 @@ const MONTHS = [
 ];
 const intakes = (() => {
   const now = new Date();
-  const out: string[] = [];
+  const out = [];
   for (let y = now.getFullYear(); y <= now.getFullYear() + 2; y++) {
     for (const m of [0, 8])
       if (new Date(y, m, 1) > now) out.push(`${MONTHS[m]} ${y}`);
@@ -732,7 +732,7 @@ const blank = () => ({
   level: "",
   result: "",
   english: "",
-  countries: [] as string[],
+  countries: [],
   intake: "",
   budget: "",
   contactVia: "Phone call",
@@ -742,9 +742,9 @@ const blank = () => ({
   website: "",
 });
 const form = reactive(blank());
-const errors = reactive<Record<string, string>>({});
-const status = ref<"idle" | "sending" | "success" | "error">("idle");
-const reference = ref<string | null>(null);
+const errors = reactive({});
+const status = ref("idle");
+const reference = ref(null);
 const errorText = ref("");
 
 const firstName = computed(() => form.fullName.split(" ")[0] || "there");
@@ -782,7 +782,7 @@ function focusFirstError() {
     const id = first === "countries" ? "l-countries" : `f-${first}`;
     const target = document.getElementById(id);
     target?.scrollIntoView({ behavior: "smooth", block: "center" });
-    (target as HTMLElement | null)?.focus?.({ preventScroll: true });
+    (target)?.focus?.({ preventScroll: true });
   });
 }
 
@@ -804,7 +804,7 @@ function validate() {
 }
 
 /* API field names (snake_case) -> form field names */
-const FIELD_MAP: Record<string, string> = {
+const FIELD_MAP = {
   full_name: "fullName",
   contact_via: "contactVia",
 };
@@ -821,7 +821,7 @@ async function submit() {
   status.value = "sending";
   errorText.value = "";
   try {
-    const res: any = await $fetch(`${apiBase}/assessment`, {
+    const res = await $fetch(`${apiBase}/assessment`, {
       method: "POST",
       headers: { Accept: "application/json" },
       body: {
@@ -849,7 +849,7 @@ async function submit() {
         .getElementById("apply-form")
         ?.scrollIntoView({ behavior: "smooth", block: "start" }),
     );
-  } catch (e: any) {
+  } catch (e) {
     const code = e?.statusCode ?? e?.response?.status;
     const body = e?.data ?? e?.response?._data;
     // Debug: shows the real reason in the browser console
@@ -857,7 +857,7 @@ async function submit() {
 
     if (code === 422 && body?.errors) {
       Object.keys(errors).forEach((k) => delete errors[k]);
-      Object.entries(body.errors as Record<string, string[]>).forEach(
+      Object.entries(body.errors).forEach(
         ([key, msgs]) => {
           const base = key.split(".")[0];
           const field = FIELD_MAP[base] || base;

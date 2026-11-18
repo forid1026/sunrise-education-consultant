@@ -383,14 +383,16 @@
 // Set NUXT_PUBLIC_API_BASE (or runtimeConfig.public.apiBase) to your API root.
 // ---------------------------------------------------------------
 const config = useRuntimeConfig();
-const apiBase = config.public.apiBase || "http://localhost:8000/api";
 const siteUrl = (config.public.siteUrl || "https://sunrise-bd.net").replace(/\/+$/, "") + "/";
 
 const {
   data: res,
   pending,
   error,
-} = await useAsyncData("staff-list", () => $fetch(`${apiBase}/staff`));
+} = await useApi("/staff", {
+  key: "staff-list",
+  transform: (r) => r.data,
+});
 
 // ---------- helpers ----------
 const GROUPS = [
@@ -455,7 +457,7 @@ function hideImg(e) {
 
 // ---------- state ----------
 const staff = computed(() =>
-  (res.value?.data || []).map((m) => ({ ...m, _g: classify(m) })),
+  (res.value || []).map((m) => ({ ...m, _g: classify(m) })),
 );
 const total = computed(() => staff.value.length);
 const counts = computed(() => {
